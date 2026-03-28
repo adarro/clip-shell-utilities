@@ -4,6 +4,7 @@
 
 set shell := ["bash", "-c"]
 set positional-arguments := true
+set quiet
 
 # Display all available recipes
 @help:
@@ -155,3 +156,39 @@ set positional-arguments := true
     echo "Demo:"
     echo "  just demo             - Demo with example URL"
     echo "  just demo-local       - Demo with local directory"
+    echo ""
+    echo "Serve:"
+    echo "  just serve            - Serve with npx serve (uses HTTP_SERVE env var)"
+    echo "  just serve <path>     - Serve specific directory"
+
+# Serve directory with npx serve in a new terminal window
+@serve path='':
+    #!/bin/bash
+    if [ -z "{{path}}" ]; then
+        URL="${HTTP_SERVE:-.}"
+    else
+        URL="{{path}}"
+    fi
+    
+    # Try different terminal emulators in order of preference
+    if command -v gnome-terminal &>/dev/null; then
+        gnome-terminal -- npx serve "$URL" &
+    elif command -v xfce4-terminal &>/dev/null; then
+        xfce4-terminal -e "npx serve \"$URL\"" &
+    elif command -v konsole &>/dev/null; then
+        konsole -e npx serve "$URL" &
+    elif command -v xterm &>/dev/null; then
+        xterm -e npx serve "$URL" &
+    elif command -v x-terminal-emulator &>/dev/null; then
+        x-terminal-emulator -e npx serve "$URL" &
+    else
+        echo "Error: No terminal emulator found. Please install one of:"
+        echo "  - gnome-terminal"
+        echo "  - xfce4-terminal"
+        echo "  - konsole"
+        echo "  - xterm"
+        exit 1
+    fi
+    echo "✓ Started npx serve for: $URL"
+    echo "Opening browser when ready..."
+    ./check-clipboard-url.sh || true
