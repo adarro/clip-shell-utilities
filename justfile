@@ -169,7 +169,7 @@ set quiet
     else
         URL="{{path}}"
     fi
-    
+
     # Try different terminal emulators in order of preference
     if command -v gnome-terminal &>/dev/null; then
         gnome-terminal -- npx serve "$URL" &
