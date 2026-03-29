@@ -1,42 +1,143 @@
 # Justfile for check-clipboard-url project
 # Install: https://github.com/casey/just
 # Usage: just <recipe>
+#
+# MODULE USAGE (via environment variables):
+# ==========================================
+# Parent justfile can pass parameters by setting environment variables:
+#   CLIPBOARD_RETRY_COUNT=10 just clipp::url
+#   CLIPBOARD_WAIT_TIME=3 just clipp::url
+#   CLIPBOARD_MODE=local just clipp::url
+#
+# STANDALONE USAGE:
+# =================
+# Direct execution: just url, just local, just check, etc.
 
 set shell := ["bash", "-c"]
 set positional-arguments := true
 set quiet
 
+# ============= Configuration via Environment Variables =============
+# Read environment variables if set, otherwise use defaults via bash
+# This allows parent justfiles to override them easily
+
+export CLIPBOARD_RETRY_COUNT := `if [ -n "${CLIPBOARD_RETRY_COUNT:-}" ]; then echo "${CLIPBOARD_RETRY_COUNT}"; else echo "5"; fi`
+export CLIPBOARD_WAIT_TIME := `if [ -n "${CLIPBOARD_WAIT_TIME:-}" ]; then echo "${CLIPBOARD_WAIT_TIME}"; else echo "2"; fi`
+export CLIPBOARD_MODE := `if [ -n "${CLIPBOARD_MODE:-}" ]; then echo "${CLIPBOARD_MODE}"; else echo "url"; fi`
+
+# ============= Core Flexible Recipe =============
+# Main recipe that uses exported environment variables
+# Usage: just check
+# Or from parent: CLIPBOARD_RETRY_COUNT=10 just clipp::check
+@check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Environment variables are already exported and accessible
+    retry_count="${CLIPBOARD_RETRY_COUNT}"
+    wait_time="${CLIPBOARD_WAIT_TIME}"
+    check_mode="${CLIPBOARD_MODE}"
+    
+    # Build command arguments
+    declare -a args=()
+    [[ "$check_mode" == "local" ]] && args+=(--local)
+    [[ "$retry_count" != "5" ]] && args+=(--retry-count "$retry_count")
+    [[ "$wait_time" != "2" ]] && args+=(--wait-time "$wait_time")
+    
+    ./check-clipboard-url.sh "${args[@]}"
+
+# ============= Convenience Recipes (Standalone & Module-friendly) =============
+# These recipes work both standalone and as module recipes
+# They respect environment variables set by parent justfiles
+
 # Display all available recipes
 @help:
     just --list
 
-# Run the clipboard URL checker with default settings (5 retries, 2s wait)
+# Run the clipboard URL checker with configured settings (respects CLIPBOARD_* env vars)
 @url:
-    ./check-clipboard-url.sh
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    declare -a args=()
+    [[ "${CLIPBOARD_MODE}" == "local" ]] && args+=(--local)
+    [[ "${CLIPBOARD_RETRY_COUNT}" != "5" ]] && args+=(--retry-count "${CLIPBOARD_RETRY_COUNT}")
+    [[ "${CLIPBOARD_WAIT_TIME}" != "2" ]] && args+=(--wait-time "${CLIPBOARD_WAIT_TIME}")
+    
+    ./check-clipboard-url.sh "${args[@]}"
 
 # Run the clipboard URL checker in local mode (directory path)
+# Usage: just local
+# Or override retries/wait from parent: CLIPBOARD_RETRY_COUNT=10 just clipp::local
 @local:
-    ./check-clipboard-url.sh --local
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    declare -a args=(--local)
+    [[ "${CLIPBOARD_RETRY_COUNT}" != "5" ]] && args+=(--retry-count "${CLIPBOARD_RETRY_COUNT}")
+    [[ "${CLIPBOARD_WAIT_TIME}" != "2" ]] && args+=(--wait-time "${CLIPBOARD_WAIT_TIME}")
+    
+    ./check-clipboard-url.sh "${args[@]}"
 
 # Run with custom retry count
+# Usage: just url-retry 10  (standalone)
+# Or override from parent: CLIPBOARD_RETRY_COUNT=10 just clipp::url
 @url-retry count:
-    ./check-clipboard-url.sh --retry-count {{count}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    declare -a args=()
+    [[ "${CLIPBOARD_MODE}" == "local" ]] && args+=(--local)
+    args+=(--retry-count {{count}})
+    [[ "${CLIPBOARD_WAIT_TIME}" != "2" ]] && args+=(--wait-time "${CLIPBOARD_WAIT_TIME}")
+    
+    ./check-clipboard-url.sh "${args[@]}"
 
 # Run with custom wait time (seconds)
+# Usage: just url-wait 5  (standalone)
 @url-wait seconds:
-    ./check-clipboard-url.sh --wait-time {{seconds}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    declare -a args=()
+    [[ "${CLIPBOARD_MODE}" == "local" ]] && args+=(--local)
+    [[ "${CLIPBOARD_RETRY_COUNT}" != "5" ]] && args+=(--retry-count "${CLIPBOARD_RETRY_COUNT}")
+    args+=(--wait-time {{seconds}})
+    
+    ./check-clipboard-url.sh "${args[@]}"
 
 # Run in infinite loop mode
 @url-infinite:
-    ./check-clipboard-url.sh --retry-count -1
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    declare -a args=()
+    [[ "${CLIPBOARD_MODE}" == "local" ]] && args+=(--local)
+    args+=(--retry-count -1)
+    [[ "${CLIPBOARD_WAIT_TIME}" != "2" ]] && args+=(--wait-time "${CLIPBOARD_WAIT_TIME}")
+    
+    ./check-clipboard-url.sh "${args[@]}"
 
 # Run in infinite loop mode with custom wait time
 @url-infinite-wait seconds:
-    ./check-clipboard-url.sh --retry-count -1 --wait-time {{seconds}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    declare -a args=()
+    [[ "${CLIPBOARD_MODE}" == "local" ]] && args+=(--local)
+    args+=(--retry-count -1 --wait-time {{seconds}})
+    
+    ./check-clipboard-url.sh "${args[@]}"
 
 # Run in local mode with infinite retries
 @local-infinite:
-    ./check-clipboard-url.sh --local --retry-count -1
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    declare -a args=(--local --retry-count -1)
+    [[ "${CLIPBOARD_WAIT_TIME}" != "2" ]] && args+=(--wait-time "${CLIPBOARD_WAIT_TIME}")
+    
+    ./check-clipboard-url.sh "${args[@]}"
 
 # Run all unit tests
 @test:
