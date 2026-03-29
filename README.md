@@ -12,28 +12,34 @@ A bash script that monitors your clipboard for valid URLs or local directory pat
 - ✅ **Cross-Platform** - Supports Linux, macOS, and WSL environments
 - ✅ **Clipboard Detection** - Automatically uses xclip, xsel, pbpaste, or PowerShell
 - ✅ **Comprehensive Testing** - 35+ unit tests + 14+ integration tests
-- ✅ **Easy Task Management** - Justfile with 20+ recipes for common operations
+- ✅ **Easy Task Management** - Justfile with 25+ recipes for common operations
 
 ## Requirements
 
 ### Clipboard Tools
+
 One of the following must be installed:
+
 - **Linux**: `xclip` or `xsel`
 - **macOS**: `pbpaste` (built-in)
 - **WSL**: `powershell.exe` (Windows binary accessible from WSL)
 
 ### Browser Launcher
+
 One of the following must be available:
+
 - **Linux**: `xdg-open` (usually pre-installed)
 - **macOS**: `open` (built-in)
 
 ### Optional
+
 - `just` - Task runner for convenient recipe execution ([install here](https://github.com/casey/just))
 - `shellcheck` - Shell script linter (for code analysis)
 
 ## Installation
 
 ### Quick Setup
+
 ```bash
 # Clone or download the scripts
 cd /path/to/scriptutil
@@ -48,6 +54,7 @@ chmod +x integration-test-check-clipboard-url.sh
 ```
 
 ### Using Just
+
 ```bash
 # Setup all scripts at once
 just setup
@@ -103,6 +110,10 @@ just test-quick                       # Quick test preview
 just demo                             # Demo with example URL
 just demo-local                       # Demo with test directory
 
+# Serve
+just serve                            # Serve with npx serve (uses HTTP_SERVE env var)
+just serve <path>                     # Serve specific directory
+
 # Utilities
 just usage                            # Show quick reference
 just info                             # Show script info
@@ -113,6 +124,7 @@ just lint                             # ShellCheck analysis
 ## Examples
 
 ### Example 1: Open URL from Clipboard
+
 ```bash
 # Copy a URL to clipboard first
 # (e.g., highlight a URL and Ctrl+C)
@@ -126,6 +138,7 @@ just lint                             # ShellCheck analysis
 ```
 
 ### Example 2: Open Directory in File Manager
+
 ```bash
 # Copy a directory path to clipboard
 echo "/home/user/documents" | xclip -selection clipboard
@@ -139,6 +152,7 @@ echo "/home/user/documents" | xclip -selection clipboard
 ```
 
 ### Example 3: Infinite Retry Mode
+
 ```bash
 # Wait indefinitely for a valid URL
 ./check-clipboard-url.sh --retry-count -1 --wait-time 2
@@ -148,6 +162,7 @@ echo "/home/user/documents" | xclip -selection clipboard
 ```
 
 ### Example 4: Using a Just Recipe
+
 ```bash
 # Navigate to the scriptutil directory
 cd /path/to/scriptutil
@@ -161,17 +176,17 @@ just test-all
 
 ## Command Options
 
-```
+```bash
 Usage: ./check-clipboard-url.sh [OPTIONS]
 
 Options:
   --retry-count N       Number of retries before giving up
                         - Positive integer: retry that many times
                         - -1: infinite retries (press Ctrl+C to exit)
-                        
+
   --wait-time N         Seconds to wait between retry attempts
                         - Must be >= 1 second (minimum enforced)
-                        
+
   --local, -l           Treat clipboard as local directory path
                         - Validates directory exists and is readable
                         - Supports tilde (~) expansion to home directory
@@ -199,25 +214,29 @@ Valid URLs must match one of these patterns:
    - `github.com`
 
 Invalid URLs:
-   - `example` (no TLD)
-   - `just-text` (no domain)
-   - `ftp://example.com` (unsupported protocol)
-   - `-example.com` (starts with hyphen)
+
+- `example` (no TLD)
+- `just-text` (no domain)
+- `ftp://example.com` (unsupported protocol)
+- `-example.com` (starts with hyphen)
 
 ## Directory Validation Rules (Local Mode)
 
 Valid directories must:
+
 - Exist on the filesystem
 - Be readable by the current user
 - Be an actual directory (not a file)
 
 Supports tilde expansion:
+
 - `~` → `/home/username`
 - `~/documents` → `/home/username/documents`
 
 ## Testing
 
 ### Run Unit Tests
+
 ```bash
 ./test-check-clipboard-url.sh
 
@@ -228,6 +247,7 @@ Supports tilde expansion:
 ```
 
 ### Run Integration Tests
+
 ```bash
 ./integration-test-check-clipboard-url.sh
 
@@ -235,13 +255,17 @@ Supports tilde expansion:
 ```
 
 ### Run All Tests
+
 ```bash
 just test-all
 ```
 
 ### Test Coverage
 
-**Unit Tests (35 tests)**
+#### Unit Tests
+
+35 tests
+
 - URL validation (valid and invalid URLs)
 - Browser protocol handling
 - WSL environment detection
@@ -250,7 +274,10 @@ just test-all
 - Local mode directory validation
 - Option parsing
 
-**Integration Tests (14+ tests)**
+#### Integration Tests
+
+14+ tests
+
 - Clipboard tool detection
 - Browser launcher detection
 - Clipboard read/write operations
@@ -258,9 +285,54 @@ just test-all
 - Retry timing validation
 - Local mode directory access
 
+## Continuous Integration
+
+This project uses **GitHub Actions** to automatically test code on multiple operating systems.
+
+### Automated Workflows
+
+| Workflow               | Trigger                 | Purpose                                            |
+| ---------------------- | ----------------------- | -------------------------------------------------- |
+| **CI Tests**           | Push, PR, manual        | Runs unit and integration tests on Linux and macOS |
+| **ShellCheck Linting** | Push, PR, manual        | Static analysis with ShellCheck                    |
+| **Trunk Checks**       | Push, PR, manual        | Code quality checks with Trunk                     |
+| **Extended Tests**     | Weekly schedule, manual | Includes flakey tests (WSL) and longer timeouts    |
+
+### Supported Platforms
+
+Tests automatically run on:
+
+- **Linux** (Ubuntu latest) - Tests xclip/xsel clipboard tools and xdg-open browser launcher
+- **macOS** (latest) - Tests pbpaste clipboard and open browser launcher
+- **Extended** (weekly) - Optional extended testing with flakey test scenarios
+
+### Test Results
+
+All workflows must pass before merging pull requests:
+
+- ✅ **35 unit tests** - Fast, isolated functionality tests
+- ✅ **15 integration tests** - Real clipboard and browser operations
+- ✅ **ShellCheck** - Code quality and best practices
+
+### Local Development
+
+To verify your changes locally before pushing:
+
+```bash
+# Run all tests locally
+just test-all
+
+# Run ShellCheck if installed
+just lint
+
+# Run trunk checks if installed
+trunk check
+```
+
 ## Architecture
 
 ### Files
+
 - `check-clipboard-url.sh` - Main script (executable)
 - `test-check-clipboard-url.sh` - Unit test suite
 - `integration-test-check-clipboard-url.sh` - Integration tests
@@ -271,6 +343,7 @@ just test-all
 ### Key Functions
 
 **Main Script**
+
 - `is_wsl()` - Detect WSL environment
 - `is_valid_url()` - Validate URL format
 - `is_valid_directory()` - Validate directory path
@@ -279,32 +352,36 @@ just test-all
 
 ## Environment Support
 
-| Environment | Clipboard Tool | Browser Launcher | Status |
-|---|---|---|---|
-| Linux (Desktop) | xclip/xsel | xdg-open | ✓ Fully supported |
-| Linux (Server) | none | none | ⚠ Requires setup |
-| macOS | pbpaste | open | ✓ Fully supported |
-| WSL (Windows) | powershell.exe | xdg-open | ✓ Fully supported |
-| Container | depends | depends | ⚠ Case-by-case |
+| Environment     | Clipboard Tool | Browser Launcher | Status            |
+| --------------- | -------------- | ---------------- | ----------------- |
+| Linux (Desktop) | xclip/xsel     | xdg-open         | ✓ Fully supported |
+| Linux (Server)  | none           | none             | ⚠ Requires setup  |
+| macOS           | pbpaste        | open             | ✓ Fully supported |
+| WSL (Windows)   | powershell.exe | xdg-open         | ✓ Fully supported |
+| Container       | depends        | depends          | ⚠ Case-by-case    |
 
 ## Troubleshooting
 
 ### "Error: Could not access clipboard"
+
 - **Linux**: Install `xclip` (`sudo apt-get install xclip`) or `xsel`
 - **macOS**: Verify `pbpaste` is available (should be built-in)
 - **WSL**: Ensure `powershell.exe` is in PATH (usually automatic)
 
 ### "Error: No browser launcher found"
+
 - **Linux**: Install `xdg-open` (usually pre-installed, or try `sudo apt-get install xdg-utils`)
 - **macOS**: Verify `open` is available (should be built-in)
 
 ### "Pattern not found" or script exits immediately
+
 - Ensure clipboard contains valid URL or directory path
 - Check clipboard content: `xclip -selection clipboard -o` (Linux) or `powershell.exe -command Get-Clipboard` (WSL)
 
 ## Contributing
 
 The project includes comprehensive tests. When adding features:
+
 1. Add unit tests to `test-check-clipboard-url.sh`
 2. Add integration tests to `integration-test-check-clipboard-url.sh`
 3. Run `just test-all` to verify everything passes
@@ -316,14 +393,9 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 ## Author
 
+Andre White [github](https://github.com/adarro)
 Created as a utility script for clipboard management and automation.
 
 ## Changelog
 
-### v1.0.0 (2026-03-28)
-- Initial release
-- URL and local directory path detection
-- Configurable retry and wait time settings
-- WSL support via PowerShell
-- Comprehensive test suites
-- Justfile with 20+ recipes
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.

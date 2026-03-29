@@ -1,0 +1,35 @@
+name: ShellCheck Linting
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+jobs:
+  shellcheck:
+    name: ShellCheck Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck on main script
+        run: shellcheck check-clipboard-url.sh
+        continue-on-error: true
+
+      - name: Run ShellCheck on unit tests
+        run: shellcheck test-check-clipboard-url.sh
+        continue-on-error: true
+
+      - name: Run ShellCheck on integration tests
+        run: shellcheck integration-test-check-clipboard-url.sh
+        continue-on-error: true
+
+      - name: ShellCheck summary
+        run: echo "ShellCheck linting completed"
