@@ -1,0 +1,60 @@
+name: CI Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            os-label: "Linux"
+          - os: macos-latest
+            os-label: "macOS"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup - Ubuntu
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xclip xdg-utils
+
+      - name: Verify clipboard tool availability - Linux
+        if: runner.os == 'Linux'
+        run: |
+          which xclip || which xsel || (echo "No clipboard tool found" && exit 1)
+          which xdg-open || (echo "xdg-open not found" && exit 1)
+
+      - name: Verify clipboard tool availability - macOS
+        if: runner.os == 'macOS'
+        run: |
+          which pbpaste || (echo "pbpaste not found" && exit 1)
+          which open || (echo "open command not found" && exit 1)
+
+      - name: Make scripts executable
+        run: |
+          chmod +x check-clipboard-url.sh
+          chmod +x test-check-clipboard-url.sh
+          chmod +x integration-test-check-clipboard-url.sh
+
+      - name: Run unit tests
+        run: ./test-check-clipboard-url.sh
+
+      - name: Run integration tests
+        run: ./integration-test-check-clipboard-url.sh
+
+      - name: Test summary
+        if: always()
+        run: echo "Tests completed on ${{ matrix.os-label }}"

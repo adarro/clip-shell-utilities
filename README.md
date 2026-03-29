@@ -285,6 +285,50 @@ just test-all
 - Retry timing validation
 - Local mode directory access
 
+## Continuous Integration
+
+This project uses **GitHub Actions** to automatically test code on multiple operating systems.
+
+### Automated Workflows
+
+| Workflow               | Trigger                 | Purpose                                            |
+| ---------------------- | ----------------------- | -------------------------------------------------- |
+| **CI Tests**           | Push, PR, manual        | Runs unit and integration tests on Linux and macOS |
+| **ShellCheck Linting** | Push, PR, manual        | Static analysis with ShellCheck                    |
+| **Trunk Checks**       | Push, PR, manual        | Code quality checks with Trunk                     |
+| **Extended Tests**     | Weekly schedule, manual | Includes flakey tests (WSL) and longer timeouts    |
+
+### Supported Platforms
+
+Tests automatically run on:
+
+- **Linux** (Ubuntu latest) - Tests xclip/xsel clipboard tools and xdg-open browser launcher
+- **macOS** (latest) - Tests pbpaste clipboard and open browser launcher
+- **Extended** (weekly) - Optional extended testing with flakey test scenarios
+
+### Test Results
+
+All workflows must pass before merging pull requests:
+
+- ✅ **35 unit tests** - Fast, isolated functionality tests
+- ✅ **15 integration tests** - Real clipboard and browser operations
+- ✅ **ShellCheck** - Code quality and best practices
+
+### Local Development
+
+To verify your changes locally before pushing:
+
+```bash
+# Run all tests locally
+just test-all
+
+# Run ShellCheck if installed
+just lint
+
+# Run trunk checks if installed
+trunk check
+```
+
 ## Architecture
 
 ### Files

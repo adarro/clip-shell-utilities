@@ -1,0 +1,42 @@
+name: Extended Tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 0" # Weekly on Sunday at 2 AM UTC
+
+jobs:
+  extended-test:
+    name: Extended tests on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup - Ubuntu
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xclip xdg-utils
+
+      - name: Make scripts executable
+        run: |
+          chmod +x check-clipboard-url.sh
+          chmod +x test-check-clipboard-url.sh
+          chmod +x integration-test-check-clipboard-url.sh
+
+      - name: Run unit tests
+        run: ./test-check-clipboard-url.sh
+
+      - name: Run integration tests (including flakey tests)
+        run: ./integration-test-check-clipboard-url.sh --flakey-tests
+        continue-on-error: true
+
+      - name: Extended test summary
+        if: always()
+        run: echo "Extended tests completed on ${{ matrix.os }}"
