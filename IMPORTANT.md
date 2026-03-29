@@ -1,5 +1,4 @@
-⚠️ IMPORTANT - PLEASE READ
-========================
+# ⚠️ IMPORTANT - PLEASE READ
 
 ## AI-Generated Code Notice
 
@@ -22,6 +21,7 @@ While the code has been tested with a comprehensive test suite (35+ unit tests, 
    - Understand the validation rules
 
 3. **Run the Tests**
+
    ```bash
    ./test-check-clipboard-url.sh              # Unit tests (35 tests)
    ./integration-test-check-clipboard-url.sh  # Integration tests (14+ tests)
@@ -61,6 +61,7 @@ These scripts are provided **"as is"** without warranty of any kind, express or 
 ## Testing Results
 
 The test suite validates:
+
 - ✓ 35 unit tests covering all functions
 - ✓ 14+ integration tests with real system calls
 - ✓ URL validation (valid/invalid scenarios)
@@ -81,6 +82,7 @@ The test suite validates:
 ## Your Responsibility
 
 By using these scripts, you acknowledge that:
+
 - You have read and understood this notice
 - You have reviewed the code
 - You have run the tests in your environment
@@ -90,6 +92,7 @@ By using these scripts, you acknowledge that:
 ## Questions or Concerns?
 
 Before running these scripts:
+
 1. Understand what the code does
 2. Verify it works in your environment with tests
 3. Ensure you trust the clipboard input source
