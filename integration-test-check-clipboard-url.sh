@@ -556,6 +556,38 @@ else
 	test_result "Short -l flag works for local mode" "skip" "Clipboard or browser tools not available"
 fi
 
+# Test 15: Local mode option parsing with cleared clipboard
+printf "\n"
+printf "%b--- Test 15: Local Mode Options with Empty Clipboard ---%b\n" "${BLUE}" "${NC}"
+if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]]; then
+	# Explicitly clear the clipboard before running the test
+	set_clipboard "" 2>/dev/null
+
+	# Test --local flag with empty clipboard (should show "Clipboard is empty" message)
+	output=$("${MAIN_SCRIPT}" --local --retry-count 1 --wait-time 1 2>&1)
+	exit_code=$?
+
+	if echo "${output}" | grep -q "Clipboard is empty"; then
+		test_result "--local flag with empty clipboard" "pass"
+	else
+		test_result "--local flag with empty clipboard" "fail" "Should show 'Clipboard is empty' but got: ${output}"
+	fi
+
+	# Test -l flag with empty clipboard (should show "Clipboard is empty" message)
+	set_clipboard "" 2>/dev/null
+	output=$("${MAIN_SCRIPT}" -l --retry-count 1 --wait-time 1 2>&1)
+	exit_code=$?
+
+	if echo "${output}" | grep -q "Clipboard is empty"; then
+		test_result "-l flag with empty clipboard" "pass"
+	else
+		test_result "-l flag with empty clipboard" "fail" "Should show 'Clipboard is empty' but got: ${output}"
+	fi
+else
+	test_result "--local flag with empty clipboard" "skip" "Clipboard tools not available"
+	test_result "-l flag with empty clipboard" "skip" "Clipboard tools not available"
+fi
+
 # Print summary
 printf "\n"
 printf "%b==========================================\n" "${BLUE}"

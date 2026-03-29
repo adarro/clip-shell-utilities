@@ -277,27 +277,6 @@ test_directory_validation "~" "valid" "Tilde expansion to home"
 test_directory_validation "/nonexistent/path" "invalid" "Nonexistent directory"
 test_directory_validation "/etc/passwd" "invalid" "File instead of directory"
 
-# Test 10: Local mode option parsing
-echo ""
-echo "--- Test 10: Local mode option parsing ---"
-TESTS_RUN=$((TESTS_RUN + 1))
-if "${SCRIPT_DIR}/check-clipboard-url.sh" --local --retry-count 5 --wait-time 10 2>&1 | grep -q "Clipboard is empty\|Invalid directory"; then
-	printf "%b✓ PASS%b: --local flag accepted\n" "${GREEN}" "${NC}"
-	TESTS_PASSED=$((TESTS_PASSED + 1))
-else
-	printf "%b✗ FAIL%b: --local flag should be accepted\n" "${RED}" "${NC}"
-	TESTS_FAILED=$((TESTS_FAILED + 1))
-fi
-
-TESTS_RUN=$((TESTS_RUN + 1))
-if "${SCRIPT_DIR}/check-clipboard-url.sh" -l --retry-count 5 --wait-time 10 2>&1 | grep -q "Clipboard is empty\|Invalid directory"; then
-	printf "%b✓ PASS%b: -l flag (short form) accepted\n" "${GREEN}" "${NC}"
-	TESTS_PASSED=$((TESTS_PASSED + 1))
-else
-	printf "%b✗ FAIL%b: -l flag should be accepted\n" "${RED}" "${NC}"
-	TESTS_FAILED=$((TESTS_FAILED + 1))
-fi
-
 # Print summary
 echo ""
 echo "=========================================="
