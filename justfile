@@ -42,9 +42,15 @@ set quiet
 @test:
     ./test-check-clipboard-url.sh
 
-# Run all integration tests
-@test-integration:
+# Run integration tests
+@test-integration flakey-tests="false":
+    if [ "{{flakey-tests}}" = "true" ]; then
+    echo "Running integration tests including flakey tests..."
+    ./integration-test-check-clipboard-url.sh --flakey-tests
+    else
+    echo "Running integration tests (excluding flakey tests)..."
     ./integration-test-check-clipboard-url.sh
+    fi
 
 # Run unit tests with verbose output
 @test-verbose:
@@ -60,7 +66,7 @@ set quiet
     ./test-check-clipboard-url.sh
     echo ""
     echo "=== Running Integration Tests ==="
-    ./integration-test-check-clipboard-url.sh
+    ./integration-test-check-clipboard-url.sh  --flakey-tests
 
 # Make all scripts executable
 @setup:

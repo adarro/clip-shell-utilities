@@ -311,7 +311,7 @@ if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]] && [[ ${SKIP_BROWSER_TESTS} != "true"
 	FAKE_BROWSER="${TEMP_DIR}/fake-browser"
 
 	if [[ ${DETECTED_BROWSER_LAUNCHER} == "xdg-open" ]]; then
-		cat >${FAKE_BROWSER} <<'EOF'
+		cat >"${FAKE_BROWSER}" <<'EOF'
 #!/bin/bash
 echo "Browser would open: $1" > /tmp/browser-call.log
 exit 0

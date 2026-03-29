@@ -113,7 +113,7 @@ test_browser_opening() {
 
 	result=$(open_browser_test "${url}")
 
-	if [[ $? -eq 0 ]] && [[ ${result} == ${expected_result} ]]; then
+	if [[ $? -eq 0 ]] && [[ ${result} == "${expected_result}" ]]; then
 		printf "%b✓ PASS%b: %s (opened: %s)\n" "${GREEN}" "${NC}" "${test_name}" "${result}"
 		TESTS_PASSED=$((TESTS_PASSED + 1))
 		return 0
@@ -287,7 +287,7 @@ printf "Tests passed: %b%s%b\n" "${GREEN}" "${TESTS_PASSED}" "${NC}"
 printf "Tests failed: %b%s%b\n" "${RED}" "${TESTS_FAILED}" "${NC}"
 echo "=========================================="
 
-if [[ $TESTS_FAILED -eq 0 ]]; then
+if [[ ${TESTS_FAILED} -eq 0 ]]; then
 	printf "%bAll tests passed!%b\n" "${GREEN}" "${NC}"
 	exit 0
 else

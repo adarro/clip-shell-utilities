@@ -99,7 +99,7 @@ is_wsl() {
 
 # Function to get clipboard content (uses pre-detected CLIPBOARD_TOOL)
 get_clipboard() {
-	case "$CLIPBOARD_TOOL" in
+	case "${CLIPBOARD_TOOL}" in
 	xclip)
 		xclip -selection clipboard -o 2>/dev/null
 		;;
@@ -131,9 +131,9 @@ open_browser() {
 		url="https://${url}"
 	fi
 	printf "launching browser to %s using %s" "${url}" "${BROWSER_LAUNCHER}"
-	case "$BROWSER_LAUNCHER" in
+	case "${BROWSER_LAUNCHER}" in
 	xdg-open)
-		xdg-open ${url} &>/dev/null &
+		xdg-open "${url}" &>/dev/null &
 		;;
 	open)
 		open "${url}" &>/dev/null &
