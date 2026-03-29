@@ -30,9 +30,11 @@ While the code has been tested with a comprehensive test suite (35+ unit tests, 
 4. **Test in Your Environment**
    - Copy a known URL to your clipboard
    - Run the script with `--retry-count 1` to test once:
+
      ```bash
      ./check-clipboard-url.sh --retry-count 1 --wait-time 1
      ```
+
    - Verify the behavior matches what's documented
 
 5. **Check Dependencies**

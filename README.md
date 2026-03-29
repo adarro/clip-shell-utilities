@@ -176,7 +176,7 @@ just test-all
 
 ## Command Options
 
-```
+```bash
 Usage: ./check-clipboard-url.sh [OPTIONS]
 
 Options:
@@ -262,7 +262,9 @@ just test-all
 
 ### Test Coverage
 
-**Unit Tests (35 tests)**
+#### Unit Tests
+
+35 tests
 
 - URL validation (valid and invalid URLs)
 - Browser protocol handling
@@ -272,7 +274,9 @@ just test-all
 - Local mode directory validation
 - Option parsing
 
-**Integration Tests (14+ tests)**
+#### Integration Tests
+
+14+ tests
 
 - Clipboard tool detection
 - Browser launcher detection
@@ -345,15 +349,9 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 ## Author
 
+Andre White [github](https://github.com/adarro)
 Created as a utility script for clipboard management and automation.
 
 ## Changelog
 
-### v1.0.0 (2026-03-28)
-
-- Initial release
-- URL and local directory path detection
-- Configurable retry and wait time settings
-- WSL support via PowerShell
-- Comprehensive test suites
-- Justfile with 20+ recipes
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
