@@ -121,18 +121,22 @@ get_clipboard() {
 # Function to open URL in browser (uses pre-detected BROWSER_LAUNCHER)
 open_browser() {
 	local url="$1"
+	# replace tilde with $HOME variable for proper expansion
+	if [[ ${url} =~ ^~ ]]; then
+		url="${url/#~/${HOME}}"
+	fi
 
 	# Add protocol if not present (and not a file path)
 	if [[ ! ${url} =~ ^https?:// ]] && [[ ! ${url} =~ ^file:// ]] && [[ ! ${url} =~ ^/ ]]; then
 		url="https://${url}"
 	fi
-
+	printf "launching browser to %s using %s" "${url}" "${BROWSER_LAUNCHER}"
 	case "$BROWSER_LAUNCHER" in
 	xdg-open)
-		xdg-open "${url}" &>/dev/null
+		xdg-open ${url} &>/dev/null &
 		;;
 	open)
-		open "${url}" &>/dev/null
+		open "${url}" &>/dev/null &
 		;;
 	*)
 		echo "Error: No valid browser launcher available"

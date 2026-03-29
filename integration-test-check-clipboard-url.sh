@@ -56,15 +56,15 @@ test_result() {
 
 	case "${result}" in
 	"pass")
-		printf "${GREEN}✓ PASS${NC}: %s\n" "${test_name}"
+		printf "%b✓ PASS%b: %s\n" "${GREEN}" "${NC}" "${test_name}"
 		TESTS_PASSED=$((TESTS_PASSED + 1))
 		;;
 	"fail")
-		printf "${RED}✗ FAIL${NC}: %s - %s\n" "${test_name}" "${message}"
+		printf "%b✗ FAIL%b: %s - %s\n" "${RED}" "${NC}" "${test_name}" "${message}"
 		TESTS_FAILED=$((TESTS_FAILED + 1))
 		;;
 	"skip")
-		printf "${YELLOW}⊘ SKIP${NC}: %s - %s\n" "${test_name}" "${message}"
+		printf "%b⊘ SKIP%b: %s - %s\n" "${YELLOW}" "${NC}" "${test_name}" "${message}"
 		TESTS_SKIPPED=$((TESTS_SKIPPED + 1))
 		;;
 	esac
@@ -186,57 +186,57 @@ get_clipboard() {
 DETECTED_CLIPBOARD_TOOL=$(check_clipboard_tools 2>/dev/null)
 DETECTED_BROWSER_LAUNCHER=$(check_browser_launcher 2>/dev/null)
 
-echo "${BLUE}=========================================="
-echo "Integration Test Suite: check-clipboard-url.sh"
-echo "==========================================${NC}"
+printf "%b==========================================\n" "${BLUE}"
+printf "Integration Test Suite: check-clipboard-url.sh\n"
+printf "==========================================%b\n" "${NC}"
 echo ""
 
 # Detect environment
 if is_wsl; then
 	if is_wsl_powershell; then
-		printf "Environment: ${YELLOW}WSL (Windows Subsystem for Linux)${NC}\n"
-		printf "Clipboard: ${YELLOW}PowerShell${NC}\n"
+		printf "Environment: %bWSL (Windows Subsystem for Linux)%b\n" "${YELLOW}" "${NC}"
+		printf "Clipboard: %bPowerShell%b\n" "${YELLOW}" "${NC}"
 		if [[ ${RUN_FLAKEY_TESTS} == true ]]; then
-			printf "Mode: ${YELLOW}Flakey tests ENABLED (long timeouts)${NC}\n"
-			printf "  - Clipboard timeout: ${CLIPBOARD_TIMEOUT}s\n"
-			printf "  - Script timeout: ${SCRIPT_TIMEOUT}s\n"
+			printf "Mode: %bFlakey tests ENABLED (long timeouts)%b\n" "${YELLOW}" "${NC}"
+			printf "  - Clipboard timeout: %ss\n" "${CLIPBOARD_TIMEOUT}"
+			printf "  - Script timeout: %ss\n" "${SCRIPT_TIMEOUT}"
 			SKIP_CLIPBOARD_TESTS=false # Run tests with extended timeouts
 		else
-			printf "Mode: ${YELLOW}Flakey tests DISABLED${NC}\n"
+			printf "Mode: %bFlakey tests DISABLED%b\n" "${YELLOW}" "${NC}"
 			SKIP_CLIPBOARD_TESTS=true # Skip clipboard tests in WSL with PowerShell by default
 		fi
 	else
-		printf "Environment: ${YELLOW}WSL (Windows Subsystem for Linux)${NC}\n"
+		printf "Environment: %bWSL (Windows Subsystem for Linux)%b\n" "${YELLOW}" "${NC}"
 	fi
 else
-	printf "Environment: ${YELLOW}Native Linux/Unix${NC}\n"
+	printf "Environment: %bNative Linux/Unix%b\n" "${YELLOW}" "${NC}"
 fi
 echo ""
 
 # Test 1: Check clipboard tool availability
-echo "${BLUE}--- Test 1: Clipboard Tool Availability ---${NC}"
+printf "%b--- Test 1: Clipboard Tool Availability ---%b\n" "${BLUE}" "${NC}"
 if [[ -n ${DETECTED_CLIPBOARD_TOOL} ]]; then
 	test_result "Clipboard tool detection" "pass"
-	printf "  Using: ${YELLOW}%s${NC}\n" "${DETECTED_CLIPBOARD_TOOL}"
+	printf "  Using: %b%s%b\n" "${YELLOW}" "${DETECTED_CLIPBOARD_TOOL}" "${NC}"
 else
 	test_result "Clipboard tool detection" "skip" "No clipboard tool available (xclip, xsel, pbpaste, or WSL PowerShell)"
 	SKIP_CLIPBOARD_TESTS=true
 fi
 
 # Test 2: Check browser launcher availability
-echo ""
-echo "${BLUE}--- Test 2: Browser Launcher Availability ---${NC}"
+printf "\n"
+printf "%b--- Test 2: Browser Launcher Availability ---%b\n" "${BLUE}" "${NC}"
 if [[ -n ${DETECTED_BROWSER_LAUNCHER} ]]; then
 	test_result "Browser launcher detection" "pass"
-	printf "  Using: ${YELLOW}%s${NC}\n" "${DETECTED_BROWSER_LAUNCHER}"
+	printf "  Using: %b%s%b\n" "${YELLOW}" "${DETECTED_BROWSER_LAUNCHER}" "${NC}"
 else
 	test_result "Browser launcher detection" "skip" "No browser launcher available (xdg-open or open)"
 	SKIP_BROWSER_TESTS=true
 fi
 
 # Test 3: Clipboard read/write cycle
-echo ""
-echo "${BLUE}--- Test 3: Clipboard Read/Write ---${NC}"
+printf "\n"
+printf "%b--- Test 3: Clipboard Read/Write ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]]; then
 	TEST_URL="https://www.github.com/test"
 	echo "Testing clipboard write and read with URL: ${TEST_URL} and clipboard timeout: ${CLIPBOARD_TIMEOUT}s"
@@ -257,8 +257,8 @@ else
 fi
 
 # Test 4: Script detects empty clipboard
-echo ""
-echo "${BLUE}--- Test 4: Empty Clipboard Detection ---${NC}"
+printf "\n"
+printf "%b--- Test 4: Empty Clipboard Detection ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]]; then
 	# Place something in clipboard to insure clipboard is actually being cleared
 	set_clipboard "some random data" 2>/dev/null
@@ -281,8 +281,8 @@ else
 fi
 
 # Test 5: Script detects invalid URL
-echo ""
-echo "${BLUE}--- Test 5: Invalid URL Detection ---${NC}"
+printf "\n"
+printf "%b--- Test 5: Invalid URL Detection ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]]; then
 	set_clipboard "invalid" 2>/dev/null
 
@@ -300,8 +300,8 @@ else
 fi
 
 # Test 6: Script accepts valid HTTPS URL
-echo ""
-echo "${BLUE}--- Test 6: Valid HTTPS URL Acceptance ---${NC}"
+printf "\n"
+printf "%b--- Test 6: Valid HTTPS URL Acceptance ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]] && [[ ${SKIP_BROWSER_TESTS} != "true" ]]; then
 	set_clipboard "https://www.example.com" 2>/dev/null
 
@@ -355,8 +355,8 @@ else
 fi
 
 # Test 7: Script accepts valid HTTP URL
-echo ""
-echo "${BLUE}--- Test 7: Valid HTTP URL Acceptance ---${NC}"
+printf "\n"
+printf "%b--- Test 7: Valid HTTP URL Acceptance ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]] && [[ ${SKIP_BROWSER_TESTS} != "true" ]]; then
 	set_clipboard "http://localhost:8080" 2>/dev/null
 
@@ -396,8 +396,8 @@ else
 fi
 
 # Test 8: Script accepts domain without protocol
-echo ""
-echo "${BLUE}--- Test 8: Domain Without Protocol Acceptance ---${NC}"
+printf "\n"
+printf "%b--- Test 8: Domain Without Protocol Acceptance ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]] && [[ ${SKIP_BROWSER_TESTS} != "true" ]]; then
 	set_clipboard "www.example.com" 2>/dev/null
 
@@ -436,8 +436,8 @@ else
 fi
 
 # Test 9: Script handles retry logic
-echo ""
-echo "${BLUE}--- Test 9: Retry Logic ---${NC}"
+printf "\n"
+printf "%b--- Test 9: Retry Logic ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]]; then
 	# Put invalid URL in clipboard
 	set_clipboard "invalid" 2>/dev/null
@@ -452,7 +452,7 @@ if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]]; then
 	# (retry 1, wait 1s, retry 2, wait 1s, retry 3, no wait)
 	if [[ ${ELAPSED} -ge 2 ]]; then
 		test_result "Retry logic with timing" "pass"
-		printf "  Elapsed time: ${YELLOW}%ds${NC} (expected: ≥2s)\n" "${ELAPSED}"
+		printf "  Elapsed time: %b%s%b (expected: ≥2s)\n" "${YELLOW}" "${ELAPSED}" "${NC}"
 	else
 		test_result "Retry logic with timing" "fail" "Expected at least 2s, got ${ELAPSED}s"
 	fi
@@ -461,8 +461,8 @@ else
 fi
 
 # Test 10: Script handles infinite retry with timeout
-echo ""
-echo "${BLUE}--- Test 10: Infinite Retry Mode ---${NC}"
+printf "\n"
+printf "%b--- Test 10: Infinite Retry Mode ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]]; then
 	set_clipboard "invalid" 2>/dev/null
 
@@ -481,8 +481,8 @@ else
 fi
 
 # Test 11: Local mode with valid directory
-echo ""
-echo "${BLUE}--- Test 11: Local Mode with Valid Directory ---${NC}"
+printf "\n"
+printf "%b--- Test 11: Local Mode with Valid Directory ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]] && [[ ${SKIP_BROWSER_TESTS} != "true" ]]; then
 	set_clipboard "/tmp" 2>/dev/null
 
@@ -500,8 +500,8 @@ else
 fi
 
 # Test 12: Local mode with invalid directory
-echo ""
-echo "${BLUE}--- Test 12: Local Mode with Invalid Directory ---${NC}"
+printf "\n"
+printf "%b--- Test 12: Local Mode with Invalid Directory ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]]; then
 	set_clipboard "/nonexistent/directory/path" 2>/dev/null
 
@@ -519,8 +519,8 @@ else
 fi
 
 # Test 13: Local mode with home directory expansion
-echo ""
-echo "${BLUE}--- Test 13: Local Mode with Tilde Expansion ---${NC}"
+printf "\n"
+printf "%b--- Test 13: Local Mode with Tilde Expansion ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]] && [[ ${SKIP_BROWSER_TESTS} != "true" ]]; then
 	set_clipboard "~" 2>/dev/null
 
@@ -528,7 +528,7 @@ if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]] && [[ ${SKIP_BROWSER_TESTS} != "true"
 	output=$("${MAIN_SCRIPT}" --local --retry-count 5 --wait-time 10 2>&1)
 	exit_code=$?
 
-	if [[ ${exit_code} -eq 0 && $(echo "${output}" | grep -q "Valid directory found") ]]; then
+	if [[ ${exit_code} -eq 0 ]] && echo "${output}" | grep -q "Valid directory found"; then
 		test_result "Local mode expands tilde to home" "pass"
 	else
 		test_result "Local mode expands tilde to home" "fail" "Should expand ~ to home directory but got: ${output} with exit code ${exit_code}"
@@ -538,8 +538,8 @@ else
 fi
 
 # Test 14: Short form -l flag with local mode
-echo ""
-echo "${BLUE}--- Test 14: Local Mode with Short Flag (-l) ---${NC}"
+printf "\n"
+printf "%b--- Test 14: Local Mode with Short Flag (-l) ---%b\n" "${BLUE}" "${NC}"
 if [[ ${SKIP_CLIPBOARD_TESTS} != "true" ]]; then
 	set_clipboard "/tmp" 2>/dev/null
 
@@ -557,23 +557,23 @@ else
 fi
 
 # Print summary
-echo ""
-echo "${BLUE}=========================================="
-echo "Integration Test Summary"
-echo "==========================================${NC}"
+printf "\n"
+printf "%b==========================================\n" "${BLUE}"
+printf "Integration Test Summary\n"
+printf "==========================================%b\n" "${NC}"
 printf "Tests run:     %s\n" "${TESTS_RUN}"
-printf "Tests passed:  ${GREEN}%s${NC}\n" "${TESTS_PASSED}"
-printf "Tests failed:  ${RED}%s${NC}\n" "${TESTS_FAILED}"
-printf "Tests skipped: ${YELLOW}%s${NC}\n" "${TESTS_SKIPPED}"
-echo "${BLUE}==========================================${NC}"
+printf "Tests passed:  %b%s%b\n" "${GREEN}" "${TESTS_PASSED}" "${NC}"
+printf "Tests failed:  %b%s%b\n" "${RED}" "${TESTS_FAILED}" "${NC}"
+printf "Tests skipped: %b%s%b\n" "${YELLOW}" "${TESTS_SKIPPED}" "${NC}"
+printf "%b==========================================%b\n" "${BLUE}" "${NC}"
 
 if [[ ${TESTS_FAILED} -eq 0 ]] && [[ ${TESTS_PASSED} -gt 0 ]]; then
-	printf "${GREEN}Integration tests completed successfully!${NC}\n"
+	printf "%bIntegration tests completed successfully!%b\n" "${GREEN}" "${NC}"
 	exit 0
 elif [[ ${TESTS_SKIPPED} -eq ${TESTS_RUN} ]]; then
-	printf "${YELLOW}All tests skipped - clipboard/browser tools not available${NC}\n"
+	printf "%bAll tests skipped - clipboard/browser tools not available%b\n" "${YELLOW}" "${NC}"
 	exit 0
 else
-	printf "${RED}Some integration tests failed.${NC}\n"
+	printf "%bSome integration tests failed.%b\n" "${RED}" "${NC}"
 	exit 1
 fi
