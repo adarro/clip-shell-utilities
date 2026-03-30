@@ -6,7 +6,7 @@ set fallback
 
 # ============= Git Tool Helper Variables =============
 # Export tools directory path for use in recipes
-export GITTOOLS_DIR := justfile_directory() / "tools"
+export GITTOOLS_DIR := source_directory() / "tools"
 
 # ============= Git Submodule Operations =============
 
