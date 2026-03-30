@@ -8,6 +8,27 @@ set fallback
 # Export tools directory path for use in recipes
 export GITTOOLS_DIR := source_directory() / "tools"
 
+
+# The location of the initial just invocation (the directory where the just command was run)
+export INVOCATION_DIR := source_directory()
+# the location of this justfile
+export EXECUTING_DIR := justfile_directory()
+# EXECUTING_DIR == INVOCATION_DIR when the justfile is executed from its own directory (e.g. `just` run from the same directory as the justfile)
+
+CONFIG_DIR := `git rev-parse --git-dir`
+
+# Displays basic information about the git tools environment (for debugging and verification)
+# The results may change based on the context of the just invocation (e.g. from parent justfile vs standalone)
+[group('gittools')]
+@git-context:
+    echo "Git Tools for Justfile"
+    echo "Environment:"
+    printf "\tTool Directory:\t\t %s\n" "${GITTOOLS_DIR}"
+    printf "\tSource Directory:\t %s\n" "${INVOCATION_DIR}"
+    printf "\tJustFile Directory:\t %s\n" "${EXECUTING_DIR}"
+    printf "\tGit Config Directory:\t %s\n" "{{CONFIG_DIR}}"
+    echo ""
+
 # ============= Git Submodule Operations =============
 
 # Add a git submodule to the current repository
