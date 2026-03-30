@@ -28,7 +28,7 @@ export GITTOOLS_DIR := justfile_directory() / "tools"
     #!/usr/bin/env bash
     set -euo pipefail
     
-    if [ -z "$url" ]; then
+    if [ -z "{{url}}" ]; then
         echo "ERROR: Repository URL is required" >&2
         echo "Usage: just addSubmodule -- <repository_url> [submodule_path]" >&2
         exit 2
@@ -36,10 +36,10 @@ export GITTOOLS_DIR := justfile_directory() / "tools"
     
     script_path="${GITTOOLS_DIR}/git-submodule-add.sh"
     
-    if [ -n "$path" ]; then
-        "$script_path" "$url" "$path"
+    if [ -n "{{path}}" ]; then
+        "$script_path" "{{url}}" "{{path}}"
     else
-        "$script_path" "$url"
+        "$script_path" "{{url}}"
     fi
 
 # Remove a git submodule from the current repository (basic mode)
@@ -60,14 +60,14 @@ export GITTOOLS_DIR := justfile_directory() / "tools"
     #!/usr/bin/env bash
     set -euo pipefail
     
-    if [ -z "$path" ]; then
+    if [ -z "{{path}}" ]; then
         echo "ERROR: Submodule path is required" >&2
         echo "Usage: just removeSubmodule -- <submodule_path>" >&2
         exit 2
     fi
     
     script_path="${GITTOOLS_DIR}/git-submodule-remove.py"
-    "$script_path" "$path"
+    "$script_path" "{{path}}"
 
 # Remove a git submodule safely with automatic checkpoint/restore
 #
@@ -87,14 +87,14 @@ export GITTOOLS_DIR := justfile_directory() / "tools"
     #!/usr/bin/env bash
     set -euo pipefail
     
-    if [ -z "$path" ]; then
+    if [ -z "{{path}}" ]; then
         echo "ERROR: Submodule path is required" >&2
         echo "Usage: just removeSubmodule-safe -- <submodule_path>" >&2
         exit 2
     fi
     
     script_path="${GITTOOLS_DIR}/git-submodule-remove.py"
-    "$script_path" "$path" --checkpoint
+    "$script_path" "{{path}}" --checkpoint
 
 # Checks to see if a submodule already exists at the given path
 #
@@ -109,17 +109,17 @@ export GITTOOLS_DIR := justfile_directory() / "tools"
     #!/usr/bin/env bash
     set -euo pipefail
     
-    if [ -z "$path" ]; then
+    if [ -z "{{path}}" ]; then
         echo "ERROR: Submodule path is required" >&2
         echo "Usage: just submodule-exists -- <submodule_path>" >&2
         exit 2
     fi
     
-    if git config --file .gitmodules --get-regexp "submodule.*path" 2>/dev/null | grep -q "$path"; then
-        echo "Submodule exists at: $path"
+    if git config --file .gitmodules --get-regexp "submodule.*path" 2>/dev/null | grep -q "{{path}}"; then
+        echo "Submodule exists at: {{path}}"
         exit 0
     else
-        echo "Submodule not found at: $path"
+        echo "Submodule not found at: {{path}}"
         exit 1
     fi
 
