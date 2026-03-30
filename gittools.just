@@ -10,9 +10,9 @@ export GITTOOLS_DIR := source_directory() / "tools"
 
 
 # The location of the initial just invocation (the directory where the just command was run)
-export INVOCATION_DIR := source_directory()
+export INVOCATION_DIR := justfile_directory()
 # the location of this justfile
-export EXECUTING_DIR := justfile_directory()
+export EXECUTING_DIR := source_directory()
 # EXECUTING_DIR == INVOCATION_DIR when the justfile is executed from its own directory (e.g. `just` run from the same directory as the justfile)
 
 
