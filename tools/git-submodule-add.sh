@@ -25,6 +25,8 @@ set -euo pipefail
 # ============= Configuration =============
 readonly SCRIPT_NAME="$(basename "$0")"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Capture the directory where the script was invoked (caller's directory)
+readonly INVOCATION_DIR="${INVOCATION_DIR:-.}"
 
 # ============= Helper Functions =============
 
@@ -55,7 +57,7 @@ if ! command -v git &>/dev/null; then
 fi
 
 # Check if we're in a git repository
-if ! git rev-parse --git-dir >/dev/null 2>&1; then
+if ! git -C "${INVOCATION_DIR}" rev-parse --git-dir >/dev/null 2>&1; then
 	print_error "Not in a git repository. Please run this from the root of a git repository."
 	exit 2
 fi
@@ -74,14 +76,14 @@ fi
 
 # ============= Check if Submodule Already Exists =============
 
-# Method 1: Check .git/config
-if git config --file .gitmodules --name-only --get-regexp "submodule.*path" 2>/dev/null | grep -q "${FINAL_PATH}"; then
+# Method 1: Check .gitmodules
+if git -C "${INVOCATION_DIR}" config --file .gitmodules --name-only --get-regexp "submodule.*path" 2>/dev/null | grep -q "${FINAL_PATH}"; then
 	print_warning "Submodule already exists at path: ${FINAL_PATH}"
 	exit 1
 fi
 
 # Method 2: Check if path exists as git submodule entry
-if git config --get "submodule.${FINAL_PATH}.url" &>/dev/null; then
+if git -C "${INVOCATION_DIR}" config --get "submodule.${FINAL_PATH}.url" &>/dev/null; then
 	print_warning "Submodule '${FINAL_PATH}' is already registered in git config"
 	exit 1
 fi
@@ -101,7 +103,7 @@ fi
 
 print_info "Adding submodule from ${REPO_URL} to ${FINAL_PATH}..."
 
-if git submodule add "${REPO_URL}" "${FINAL_PATH}"; then
+if git -C "${INVOCATION_DIR}" submodule add "${REPO_URL}" "${FINAL_PATH}"; then
 	print_info "✓ Submodule added successfully at ${FINAL_PATH}"
 	exit 0
 else

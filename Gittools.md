@@ -45,22 +45,31 @@ Create checkpoint:
 - create a pre-commit snapshot
 - stash any uncommitted user data
 
-De-init Module
+~~De-init Module~~ (Deprecated -- see Improved RM Command)
 : Removes entry from .git/config
 
 ```shell
 git submodule deinit -f --$path
 ```
 
-Remove Submodule Directory
+~~Remove Submodule Directory~~ (Deprecated -- see Improved RM Command)
 : physically remove directory
 
 ```shell
 rm -rf $path
 ```
 
-Remove Entry from .gitmodules
+Updated Removal command
+: Newer git command removes physical path and local .gitmodules entry
+
+```bash
+git rm -f $path
+```
+
+~~Remove Entry from .gitmodules~~ (Deprecated -- see Improved RM Command)
 : Find and remove the entire code block related to the submodule
+
+<figure>
 
 ```ini
 [submodule "$path"]
@@ -69,13 +78,36 @@ url = repo/url
 
 ```
 
+<figcaption>typical config entry</figcaption>
+</figure>
+
 Remove entry from `.git/config`
 : remove the entire block related to the submodule
+: config file may be under `<root>/.git/config` or `<root>/.git/modules/<sub-module>/config`
+
+<figure>
+
+```bash
+config_path=$(git rev-parse --git-dir)
+config_file="${config_path}/config"
+# printf "Git Config Directory: %s\n" "${config_path}"
+# printf "Git Config File: %s\n" "${config_file}"
+```
+
+<figcaption>example bash script</figcaption>
+</figure>
+
+<figure>
 
 ```ini
 [submodule "$path"]
-url = repourl
+path = some/path
+url = repo/url
+
 ```
+
+<figcaption>typical config entry at above location</figcaption>
+</figure>
 
 Commit (Success)
 : commit changes if successful
@@ -94,6 +126,7 @@ Rollback (failure)
 
 Clear Cache (Success)
 : purge any lingering references
+: may no longer have any effect
 
 ```shell
 git rm -r --cached $path

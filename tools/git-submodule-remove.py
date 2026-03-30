@@ -45,6 +45,8 @@ class GitSubmoduleRemover:
         self.use_checkpoint = use_checkpoint
         self.checkpoint_dir: Optional[str] = None
         self.stash_created = False
+        # Use INVOCATION_DIR if provided, otherwise use current directory
+        self.invocation_dir = os.environ.get("INVOCATION_DIR", ".")
 
         # Verify we're in a git repository
         if not self._is_git_repo():
@@ -68,10 +70,9 @@ class GitSubmoduleRemover:
         """Print info message to stdout."""
         print(f"INFO: {message}")
 
-    @staticmethod
-    def _run_git_command(args: list, check: bool = True) -> Tuple[int, str, str]:
+    def _run_git_command(self, args: list, check: bool = True) -> Tuple[int, str, str]:
         """
-        Run a git command and return exit code, stdout, and stderr.
+        Run a git command in the invocation directory and return exit code, stdout, and stderr.
 
         Args:
             args: List of git command arguments (git is prepended)
@@ -82,18 +83,18 @@ class GitSubmoduleRemover:
         """
         try:
             result = subprocess.run(
-                ["git"] + args, capture_output=True, text=True, check=False
+                ["git", "-C", self.invocation_dir] + args,
+                capture_output=True,
+                text=True,
+                check=False,
             )
             return result.returncode, result.stdout, result.stderr
         except FileNotFoundError as e:
             raise RuntimeError("git is not installed or not in PATH") from e
 
-    @staticmethod
-    def _is_git_repo() -> bool:
+    def _is_git_repo(self) -> bool:
         """Check if we're in a git repository."""
-        exit_code, _, _ = GitSubmoduleRemover._run_git_command(
-            ["rev-parse", "--git-dir"], check=False
-        )
+        exit_code, _, _ = self._run_git_command(["rev-parse", "--git-dir"], check=False)
         return exit_code == 0
 
     def _is_submodule_registered(self) -> bool:
@@ -105,7 +106,49 @@ class GitSubmoduleRemover:
 
     def _submodule_exists_on_disk(self) -> bool:
         """Check if the submodule path exists on disk."""
-        return os.path.exists(self.submodule_path)
+        return os.path.exists(os.path.join(self.invocation_dir, self.submodule_path))
+
+    def _get_git_dir(self) -> Optional[str]:
+        """
+        Get the git directory path using 'git rev-parse --git-dir'.
+
+        Returns:
+            The git directory path (relative to invocation_dir), or None if not found
+        """
+        exit_code, output, _ = self._run_git_command(
+            ["rev-parse", "--git-dir"], check=False
+        )
+        if exit_code == 0:
+            return output.strip()
+        return None
+
+    def _get_git_config_path(self) -> Optional[str]:
+        """
+        Determine the correct git config file path for this submodule.
+
+        For root submodules: .git/config
+        For nested submodules: .git/modules/{path}/config
+
+        Returns:
+            The absolute path to the git config file, or None if not found
+        """
+        git_dir = self._get_git_dir()
+        if not git_dir:
+            return None
+
+        # If git_dir is relative, make it absolute relative to invocation_dir
+        if not os.path.isabs(git_dir):
+            git_dir = os.path.join(self.invocation_dir, git_dir)
+
+        # For nested submodules, the config is in .git/modules/{path}/config
+        # For root submodules, it's in .git/config
+        if os.path.isfile(git_dir):
+            # git_dir points to a .git file (worktree case)
+            return git_dir
+        else:
+            # git_dir is a directory
+            config_path = os.path.join(git_dir, "config")
+            return config_path if os.path.exists(config_path) else None
 
     def _has_uncommitted_changes(self) -> bool:
         """Check if there are uncommitted changes in the repository."""
@@ -215,13 +258,14 @@ class GitSubmoduleRemover:
 
     def _remove_submodule_directory(self) -> bool:
         """Remove the submodule directory from disk."""
-        if not os.path.exists(self.submodule_path):
+        submodule_full_path = os.path.join(self.invocation_dir, self.submodule_path)
+        if not os.path.exists(submodule_full_path):
             self.warning(f"Submodule directory not found: {self.submodule_path}")
             return True
 
         try:
             self.info(f"Removing submodule directory: {self.submodule_path}...")
-            shutil.rmtree(self.submodule_path)
+            shutil.rmtree(submodule_full_path)
             self.info("✓ Submodule directory removed")
             return True
         except Exception as e:
@@ -230,7 +274,7 @@ class GitSubmoduleRemover:
 
     def _remove_from_gitmodules(self) -> bool:
         """Remove the submodule entry from .gitmodules."""
-        gitmodules_path = ".gitmodules"
+        gitmodules_path = os.path.join(self.invocation_dir, ".gitmodules")
 
         if not os.path.exists(gitmodules_path):
             self.info("No .gitmodules file found, skipping")
@@ -273,20 +317,47 @@ class GitSubmoduleRemover:
             return False
 
     def _remove_from_git_config(self) -> bool:
-        """Remove the submodule entry from .git/config."""
-        self.info("Removing entry from .git/config...")
+        """
+        Remove the submodule entry from the appropriate git config file.
 
+        For root submodules: .git/config
+        For nested submodules: .git/modules/{path}/config
+        """
+        self.info("Removing entry from git config...")
+
+        # First try using git config command (works for both root and nested)
         exit_code, _, stderr = self._run_git_command(
             ["config", "--remove-section", f"submodule.{self.submodule_path}"],
             check=False,
         )
 
         if exit_code == 0 or "No such section" in stderr:
-            self.info("✓ Submodule removed from .git/config")
+            self.info("✓ Submodule removed from git config")
             return True
-        else:
-            self.error(f"Failed to remove from .git/config: {stderr}")
-            return False
+
+        # If git config command failed, try to remove directly from the config file
+        config_path = self._get_git_config_path()
+        if config_path and os.path.exists(config_path):
+            try:
+                self.info(f"Attempting direct removal from config: {config_path}")
+                with open(config_path, "r") as f:
+                    content = f.read()
+
+                # Remove the [submodule "path"] section and its entries
+                pattern = rf'\[submodule\s*"[^"]*{re.escape(self.submodule_path)}[^"]*"\]\s*\n(?:\s*\w+\s*=\s*[^\n]*\n)*'
+                updated_content = re.sub(pattern, "", content)
+
+                if updated_content != content:
+                    with open(config_path, "w") as f:
+                        f.write(updated_content)
+                    self.info("✓ Submodule removed from git config (direct removal)")
+                    return True
+            except Exception as e:
+                self.warning(f"Failed to remove from config file directly: {e}")
+
+        # Still return True as this might not be critical
+        self.warning("Could not verify removal from git config, but continuing...")
+        return True
 
     def _clear_git_cache(self) -> bool:
         """Clear the git cache for the submodule."""

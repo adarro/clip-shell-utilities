@@ -15,10 +15,11 @@ export INVOCATION_DIR := source_directory()
 export EXECUTING_DIR := justfile_directory()
 # EXECUTING_DIR == INVOCATION_DIR when the justfile is executed from its own directory (e.g. `just` run from the same directory as the justfile)
 
-CONFIG_DIR := `git rev-parse --git-dir`
+
 
 # Displays basic information about the git tools environment (for debugging and verification)
-# The results may change based on the context of the just invocation (e.g. from parent justfile vs standalone)
+# The results may change based on the context of the just invocation
+# (e.g. from parent justfile vs standalone)
 [group('gittools')]
 @git-context:
     echo "Git Tools for Justfile"
@@ -26,7 +27,7 @@ CONFIG_DIR := `git rev-parse --git-dir`
     printf "\tTool Directory:\t\t %s\n" "${GITTOOLS_DIR}"
     printf "\tSource Directory:\t %s\n" "${INVOCATION_DIR}"
     printf "\tJustFile Directory:\t %s\n" "${EXECUTING_DIR}"
-    printf "\tGit Config Directory:\t %s\n" "{{CONFIG_DIR}}"
+    printf "\tGit Config Directory:\t %s\n" "Per-run determination"
     echo ""
 
 # ============= Git Submodule Operations =============
