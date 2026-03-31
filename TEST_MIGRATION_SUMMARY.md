@@ -53,7 +53,13 @@ output=$("${SCRIPT_DIR}/check-clipboard-url.sh" --retry-count -1 --wait-time 1 2
 
 ### Changes to Integration Tests (`integration-test-check-clipboard-url.sh`)
 
+<!-- markdownlint disable MD036 -->
+<!-- trunk-ignore-begin(markdownlint) -->
+
 **Added Test 16: "Infinite Loop Mode Warning (Unit Test Migration)"**
+
+<!-- trunk-ignore-end(markdownlint) -->
+<!-- markdownlint enable -->
 
 Key features:
 
@@ -93,7 +99,8 @@ exit_code=$?
 
 - **Unit Test 8**: ✅ PASS - Validates `-2` is rejected (no clipboard interaction)
 - **Integration Test 16**: ⊘ SKIP - Timeout after 10s with diagnostic info showing:
-  ```
+
+  ```markdown
   ⚠ INFO: Test timed out (expected on macOS with empty clipboard)
   Diagnosis: pbpaste blocks indefinitely when clipboard is empty
   Root cause: Platform-specific clipboard tool behavior

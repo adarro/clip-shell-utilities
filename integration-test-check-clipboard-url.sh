@@ -626,7 +626,7 @@ printf "\n"
 printf "%b--- Test 16: Infinite Loop Mode Warning (Unit Test Migration) ---%b\n" "${BLUE}" "${NC}"
 
 # Set an empty clipboard to trigger the looping behavior
-set_clipboard "" 2>/dev/null &>/dev/null
+set_clipboard "" &>/dev/null
 
 # Run script with -1 retry count, timeout after 10 seconds to ensure safe termination
 # Capture first line of output which should be the warning message
