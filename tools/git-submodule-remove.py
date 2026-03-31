@@ -244,11 +244,13 @@ class GitSubmoduleRemover:
             except Exception as e:
                 self.warning(f"Failed to clean up checkpoint directory: {e}")
 
-    @warnings.deprecated(
-        "This method is deprecated and may be removed in future versions. Use _improved_rm instead."
-    )
     def _deinit_submodule(self) -> bool:
         """Deinitialize the submodule."""
+        warnings.warn(
+            "`_deinit_submodule` is deprecated and may be removed in future versions. Use `_improved_rm` instead.",
+            DeprecationWarning,
+            stacklevel=2,  # Ensures the warning points to the caller's line number
+        )
         self.info(f"Deinitializing submodule: {self.submodule_path}...")
         exit_code, _, stderr = self._run_git_command(
             ["submodule", "deinit", "-f", "--", self.submodule_path], check=False
@@ -260,11 +262,13 @@ class GitSubmoduleRemover:
             self.error(f"Failed to deinit submodule: {stderr}")
             return False
 
-    @warnings.deprecated(
-        "This method is deprecated and may be removed in future versions. Use _improved_rm instead."
-    )
     def _remove_submodule_directory(self) -> bool:
         """Remove the submodule directory from disk."""
+        warnings.warn(
+            "`_remove_submodule_directory` is deprecated and may be removed in future versions. Use `_improved_rm` instead.",
+            DeprecationWarning,
+            stacklevel=2,  # Ensures the warning points to the caller's line number
+        )
         submodule_full_path = os.path.join(self.invocation_dir, self.submodule_path)
         if not os.path.exists(submodule_full_path):
             self.warning(f"Submodule directory not found: {self.submodule_path}")
