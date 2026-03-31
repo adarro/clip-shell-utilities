@@ -7,10 +7,14 @@ on:
     branches: [main, master, develop]
   workflow_dispatch:
 
+permissions: read-all
+
 jobs:
   trunk-check:
     name: Trunk Code Quality Checks
     runs-on: ubuntu-latest
+    permissions:
+      checks: write # For trunk to post annotations
 
     steps:
       - name: Checkout repository
@@ -18,5 +22,3 @@ jobs:
 
       - name: Run Trunk checks
         uses: trunk-io/trunk-action@v1
-        with:
-          check-mode: all

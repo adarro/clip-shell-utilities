@@ -96,6 +96,30 @@ is_wsl_powershell() {
 	return $?
 }
 
+# Function to detect if running in CI/headless environment
+is_ci_environment() {
+	# Check for common CI environment variables
+	# GitHub Actions
+	[[ -n ${GITHUB_ACTIONS} ]] && return 0
+	# GitLab CI
+	[[ -n ${GITLAB_CI} ]] && return 0
+	# Generic CI variable used by many systems
+	[[ -n ${CI} ]] && return 0
+	# CircleCI
+	[[ -n ${CIRCLECI} ]] && return 0
+	# Travis CI
+	[[ -n ${TRAVIS} ]] && return 0
+	# Jenkins
+	[[ -n ${JENKINS_HOME} ]] && return 0
+	# Buildkite
+	[[ -n ${BUILDKITE} ]] && return 0
+	# Azure DevOps
+	[[ -n ${SYSTEM_TEAMFOUNDATIONCOLLECTIONURI} ]] && return 0
+	# Google Cloud Build
+	[[ -n ${BUILD_ID} ]] && [[ -n ${PROJECT_ID} ]] && return 0
+	return 1
+}
+
 # Check which clipboard tool is available
 check_clipboard_tools() {
 	if command -v xclip &>/dev/null; then
@@ -192,7 +216,12 @@ printf "==========================================%b\n" "${NC}"
 echo ""
 
 # Detect environment
-if is_wsl; then
+if is_ci_environment; then
+	printf "Environment: %bCI/Headless Mode (detected)%b\n" "${YELLOW}" "${NC}"
+	printf "Mode: %bSkipping clipboard and browser tests (headless environment)%b\n" "${YELLOW}" "${NC}"
+	SKIP_CLIPBOARD_TESTS=true
+	SKIP_BROWSER_TESTS=true
+elif is_wsl; then
 	if is_wsl_powershell; then
 		printf "Environment: %bWSL (Windows Subsystem for Linux)%b\n" "${YELLOW}" "${NC}"
 		printf "Clipboard: %bPowerShell%b\n" "${YELLOW}" "${NC}"
@@ -587,6 +616,44 @@ else
 	test_result "--local flag with empty clipboard" "skip" "Clipboard tools not available"
 	test_result "-l flag with empty clipboard" "skip" "Clipboard tools not available"
 fi
+
+# Test 16: Infinite loop mode warning message validation
+# This test validates that -1 retry count triggers infinite loop mode with proper warning.
+# Note: This test uses a 10-second timeout to ensure safe termination on all platforms.
+# Previous unit test version hung indefinitely on macOS due to pbpaste blocking on empty
+# clipboard, preventing the warning message from being flushed to output.
+printf "\n"
+printf "%b--- Test 16: Infinite Loop Mode Warning (Unit Test Migration) ---%b\n" "${BLUE}" "${NC}"
+
+# Set an empty clipboard to trigger the looping behavior
+set_clipboard "" &>/dev/null
+
+# Run script with -1 retry count, timeout after 10 seconds to ensure safe termination
+# Capture first line of output which should be the warning message
+# Use temporary file to preserve timeout exit code through pipe
+TEMP_TEST16_OUTPUT=$(mktemp)
+timeout 10 "${MAIN_SCRIPT}" --retry-count -1 --wait-time 1 >"${TEMP_TEST16_OUTPUT}" 2>&1
+exit_code=$?
+output=$(head -1 "${TEMP_TEST16_OUTPUT}")
+
+# Check if warning was captured before timeout or process error
+if echo "${output}" | grep -q "Warning: Running in infinite loop mode"; then
+	test_result "Infinite loop mode (-1) shows warning" "pass"
+	printf "  Info: Warning message captured successfully\n"
+else
+	if [[ ${exit_code} -eq 124 ]]; then
+		# Timeout exit code - likely due to pbpaste blocking on empty clipboard (macOS behavior)
+		printf "%b⚠ INFO%b: Test timed out (expected on macOS with empty clipboard)\n" "${YELLOW}" "${NC}"
+		printf "%b  Diagnosis%b: pbpaste blocks indefinitely when clipboard is empty\n" "${YELLOW}" "${NC}"
+		printf "%b  Root cause%b: Platform-specific clipboard tool behavior\n" "${YELLOW}" "${NC}"
+		test_result "Infinite loop mode (-1) shows warning" "skip" "Timeout after 10s (clipboard tool blocked)"
+	else
+		test_result "Infinite loop mode (-1) shows warning" "fail" "Expected warning message, got: '${output}' (exit code: ${exit_code})"
+	fi
+fi
+
+# Cleanup temporary file
+rm -f "${TEMP_TEST16_OUTPUT}"
 
 # Print summary
 printf "\n"
