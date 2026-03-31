@@ -34,6 +34,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import warnings
 from typing import Optional, Tuple
 
 
@@ -243,6 +244,9 @@ class GitSubmoduleRemover:
             except Exception as e:
                 self.warning(f"Failed to clean up checkpoint directory: {e}")
 
+    @warnings.deprecated(
+        "This method is deprecated and may be removed in future versions. Use _improved_rm instead."
+    )
     def _deinit_submodule(self) -> bool:
         """Deinitialize the submodule."""
         self.info(f"Deinitializing submodule: {self.submodule_path}...")
@@ -256,6 +260,9 @@ class GitSubmoduleRemover:
             self.error(f"Failed to deinit submodule: {stderr}")
             return False
 
+    @warnings.deprecated(
+        "This method is deprecated and may be removed in future versions. Use _improved_rm instead."
+    )
     def _remove_submodule_directory(self) -> bool:
         """Remove the submodule directory from disk."""
         submodule_full_path = os.path.join(self.invocation_dir, self.submodule_path)
@@ -270,6 +277,21 @@ class GitSubmoduleRemover:
             return True
         except Exception as e:
             self.error(f"Failed to remove submodule directory: {e}")
+            return False
+
+    def _improved_rm(self) -> bool:
+        """Remove folder and git modules Entry"""
+        self.info("Removing folder and .gitmodules entry for submodule...")
+
+        exit_code, _, stderr = self._run_git_command(
+            ["rm", "-r", "-f", self.submodule_path], check=False
+        )
+
+        if exit_code == 0:
+            self.info("✓ Git submodule folder and module entry cleared")
+            return True
+        else:
+            self.error(f"Failed to clear git cache: {stderr}")
             return False
 
     def _remove_from_gitmodules(self) -> bool:
@@ -419,8 +441,8 @@ class GitSubmoduleRemover:
 
         # Execute removal steps
         try:
-            if not self._deinit_submodule():
-                raise RuntimeError("Failed to deinit submodule")
+            if not self._improved_rm():
+                raise RuntimeError("Failed to remove folder and module entry")
 
             if not self._remove_from_git_config():
                 raise RuntimeError("Failed to remove from .git/config")
@@ -430,9 +452,6 @@ class GitSubmoduleRemover:
 
             if not self._clear_git_cache():
                 raise RuntimeError("Failed to clear git cache")
-
-            if not self._remove_submodule_directory():
-                raise RuntimeError("Failed to remove submodule directory")
 
             if not self._commit_removal():
                 raise RuntimeError("Failed to commit removal")
