@@ -630,8 +630,11 @@ set_clipboard "" &>/dev/null
 
 # Run script with -1 retry count, timeout after 10 seconds to ensure safe termination
 # Capture first line of output which should be the warning message
-output=$(timeout 10 "${MAIN_SCRIPT}" --retry-count -1 --wait-time 1 2>&1 | head -1)
+# Use temporary file to preserve timeout exit code through pipe
+TEMP_TEST16_OUTPUT=$(mktemp)
+timeout 10 "${MAIN_SCRIPT}" --retry-count -1 --wait-time 1 2>&1 >"${TEMP_TEST16_OUTPUT}"
 exit_code=$?
+output=$(head -1 "${TEMP_TEST16_OUTPUT}")
 
 # Check if warning was captured before timeout or process error
 if echo "${output}" | grep -q "Warning: Running in infinite loop mode"; then
@@ -648,6 +651,9 @@ else
 		test_result "Infinite loop mode (-1) shows warning" "fail" "Expected warning message, got: '${output}' (exit code: ${exit_code})"
 	fi
 fi
+
+# Cleanup temporary file
+rm -f "${TEMP_TEST16_OUTPUT}"
 
 # Print summary
 printf "\n"
