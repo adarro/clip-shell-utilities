@@ -96,6 +96,30 @@ is_wsl_powershell() {
 	return $?
 }
 
+# Function to detect if running in CI/headless environment
+is_ci_environment() {
+	# Check for common CI environment variables
+	# GitHub Actions
+	[[ -n ${GITHUB_ACTIONS} ]] && return 0
+	# GitLab CI
+	[[ -n ${GITLAB_CI} ]] && return 0
+	# Generic CI variable used by many systems
+	[[ -n ${CI} ]] && return 0
+	# CircleCI
+	[[ -n ${CIRCLECI} ]] && return 0
+	# Travis CI
+	[[ -n ${TRAVIS} ]] && return 0
+	# Jenkins
+	[[ -n ${JENKINS_HOME} ]] && return 0
+	# Buildkite
+	[[ -n ${BUILDKITE} ]] && return 0
+	# Azure DevOps
+	[[ -n ${SYSTEM_TEAMFOUNDATIONCOLLECTIONURI} ]] && return 0
+	# Google Cloud Build
+	[[ -n ${BUILD_ID} ]] && [[ -n ${PROJECT_ID} ]] && return 0
+	return 1
+}
+
 # Check which clipboard tool is available
 check_clipboard_tools() {
 	if command -v xclip &>/dev/null; then
@@ -192,7 +216,12 @@ printf "==========================================%b\n" "${NC}"
 echo ""
 
 # Detect environment
-if is_wsl; then
+if is_ci_environment; then
+	printf "Environment: %bCI/Headless Mode (detected)%b\n" "${YELLOW}" "${NC}"
+	printf "Mode: %bSkipping clipboard and browser tests (headless environment)%b\n" "${YELLOW}" "${NC}"
+	SKIP_CLIPBOARD_TESTS=true
+	SKIP_BROWSER_TESTS=true
+elif is_wsl; then
 	if is_wsl_powershell; then
 		printf "Environment: %bWSL (Windows Subsystem for Linux)%b\n" "${YELLOW}" "${NC}"
 		printf "Clipboard: %bPowerShell%b\n" "${YELLOW}" "${NC}"
