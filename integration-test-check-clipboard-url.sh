@@ -632,7 +632,7 @@ set_clipboard "" &>/dev/null
 # Capture first line of output which should be the warning message
 # Use temporary file to preserve timeout exit code through pipe
 TEMP_TEST16_OUTPUT=$(mktemp)
-timeout 10 "${MAIN_SCRIPT}" --retry-count -1 --wait-time 1 2>&1 >"${TEMP_TEST16_OUTPUT}"
+timeout 10 "${MAIN_SCRIPT}" --retry-count -1 --wait-time 1 >"${TEMP_TEST16_OUTPUT}" 2>&1
 exit_code=$?
 output=$(head -1 "${TEMP_TEST16_OUTPUT}")
 
