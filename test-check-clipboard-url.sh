@@ -214,20 +214,9 @@ else
 	TESTS_FAILED=$((TESTS_FAILED + 1))
 fi
 
-# Test 8: Infinite loop mode
+# Test 8: Invalid retry count validation
 echo ""
-echo "--- Test 8: Infinite loop mode with -1 retry count ---"
-TESTS_RUN=$((TESTS_RUN + 1))
-# Test that -1 is accepted as a valid retry count
-output=$("${SCRIPT_DIR}/check-clipboard-url.sh" --retry-count -1 --wait-time 1 2>&1 | head -1)
-if echo "${output}" | grep -q "Warning: Running in infinite loop mode"; then
-	printf "%b✓ PASS%b: Infinite loop mode (-1) accepted with warning\n" "${GREEN}" "${NC}"
-	TESTS_PASSED=$((TESTS_PASSED + 1))
-else
-	printf "%b✗ FAIL%b: Infinite loop mode (-1) should show warning, got: %s\n" "${RED}" "${NC}" "${output}"
-	TESTS_FAILED=$((TESTS_FAILED + 1))
-fi
-
+echo "--- Test 8: Invalid retry count validation ---"
 TESTS_RUN=$((TESTS_RUN + 1))
 # Test that negative retry counts other than -1 are rejected
 if ! "${SCRIPT_DIR}/check-clipboard-url.sh" --retry-count -2 &>/dev/null; then
@@ -237,6 +226,12 @@ else
 	printf "%b✗ FAIL%b: Invalid retry count (-2) should be rejected\n" "${RED}" "${NC}"
 	TESTS_FAILED=$((TESTS_FAILED + 1))
 fi
+
+# Note: Testing infinite loop mode (-1) with clipboard reading has been moved to
+# integration tests (integration-test-check-clipboard-url.sh, Test 10) due to
+# platform-specific differences in clipboard behavior. The unit test was hanging
+# on macOS because pbpaste blocks indefinitely on empty clipboard, buffering the
+# warning message before the process blocks.
 
 # Test 9: Local mode directory validation
 echo ""
