@@ -35,6 +35,7 @@ import subprocess
 import sys
 import tempfile
 import warnings
+from pathlib import Path
 from typing import Optional, Tuple
 
 
@@ -244,11 +245,13 @@ class GitSubmoduleRemover:
             except Exception as e:
                 self.warning(f"Failed to clean up checkpoint directory: {e}")
 
-    @warnings.deprecated(
-        "This method is deprecated and may be removed in future versions. Use _improved_rm instead."
-    )
     def _deinit_submodule(self) -> bool:
         """Deinitialize the submodule."""
+        warnings.warn(
+            "`_deinit_submodule` is deprecated and may be removed in future versions. Use `_improved_rm` instead.",
+            DeprecationWarning,
+            stacklevel=2,  # Ensures the warning points to the caller's line number
+        )
         self.info(f"Deinitializing submodule: {self.submodule_path}...")
         exit_code, _, stderr = self._run_git_command(
             ["submodule", "deinit", "-f", "--", self.submodule_path], check=False
@@ -260,11 +263,13 @@ class GitSubmoduleRemover:
             self.error(f"Failed to deinit submodule: {stderr}")
             return False
 
-    @warnings.deprecated(
-        "This method is deprecated and may be removed in future versions. Use _improved_rm instead."
-    )
     def _remove_submodule_directory(self) -> bool:
         """Remove the submodule directory from disk."""
+        warnings.warn(
+            "`_remove_submodule_directory` is deprecated and may be removed in future versions. Use `_improved_rm` instead.",
+            DeprecationWarning,
+            stacklevel=2,  # Ensures the warning points to the caller's line number
+        )
         submodule_full_path = os.path.join(self.invocation_dir, self.submodule_path)
         if not os.path.exists(submodule_full_path):
             self.warning(f"Submodule directory not found: {self.submodule_path}")
@@ -337,6 +342,35 @@ class GitSubmoduleRemover:
         except Exception as e:
             self.error(f"Failed to update .gitmodules: {e}")
             return False
+
+    def _remove_submodule_meta(self) -> bool:
+        """
+        Remove the submodule directories from the .git/modules/**.
+
+        For root submodules: .git/config
+        For nested submodules: .git/modules/{path}/config
+        """
+        self.info("Removing entry from git config...")
+
+        # If locate the config file and rm the parent (check for is module vs root repo ::wink::)
+        config_path = os.path.join(
+            self.invocation_dir, f".git/modules/{self.submodule_path}"
+        )
+        if config_path and os.path.exists(config_path):
+            try:
+                self.info(f"Attempting directory removal from: {config_path}")
+                shutil.rmtree(Path(config_path), ignore_errors=False)
+                return True
+            except Exception as e:
+                self.warning(
+                    f"Failed to remove from git modules directory directly: {e}"
+                )
+
+        # Still return True as this might not be critical
+        self.warning(
+            f"Could not verify removal of module meta data folders using {config_path}, but continuing..."
+        )
+        return True
 
     def _remove_from_git_config(self) -> bool:
         """
@@ -447,11 +481,14 @@ class GitSubmoduleRemover:
             if not self._remove_from_git_config():
                 raise RuntimeError("Failed to remove from .git/config")
 
-            if not self._remove_from_gitmodules():
-                raise RuntimeError("Failed to remove from .gitmodules")
+            if not self._remove_submodule_meta():
+                raise RuntimeError("Failed to remove modules data folder")
 
-            if not self._clear_git_cache():
-                raise RuntimeError("Failed to clear git cache")
+            # if not self._remove_from_gitmodules():
+            #     raise RuntimeError("Failed to remove from .gitmodules")
+
+            # if not self._clear_git_cache():
+            #     raise RuntimeError("Failed to clear git cache")
 
             if not self._commit_removal():
                 raise RuntimeError("Failed to commit removal")
