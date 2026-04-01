@@ -353,11 +353,11 @@ class GitSubmoduleRemover:
         self.info("Removing entry from git config...")
 
         # If locate the config file and rm the parent (check for is module vs root repo ::wink::)
-        config_path = self._get_git_config_path()
-        if config_path and os.path.exists(config_path) and "modules" in config_path:
+        config_path = os.path.join( self.invocation_dir, f".git/modules/{self.submodule_path}")
+        if config_path and os.path.exists(config_path):
             try:
                 self.info(f"Attempting directory removal from: {config_path}")
-                shutil.rmtree(Path(config_path).parent, ignore_errors=True)
+                shutil.rmtree(Path(config_path), ignore_errors=False)
                 return True
             except Exception as e:
                 self.warning(
@@ -366,7 +366,7 @@ class GitSubmoduleRemover:
 
         # Still return True as this might not be critical
         self.warning(
-            "Could not verify removal of module meta data folders, but continuing..."
+            f"Could not verify removal of module meta data folders using {config_path}, but continuing..."
         )
         return True
 
