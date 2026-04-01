@@ -296,7 +296,7 @@ class GitSubmoduleRemover:
             self.info("✓ Git submodule folder and module entry cleared")
             return True
         else:
-            self.error(f"Failed to clear git cache: {stderr}")
+            self.error(f"Failed to clear git rm -r -f: {stderr}")
             return False
 
     def _remove_from_gitmodules(self) -> bool:
