@@ -353,7 +353,9 @@ class GitSubmoduleRemover:
         self.info("Removing entry from git config...")
 
         # If locate the config file and rm the parent (check for is module vs root repo ::wink::)
-        config_path = os.path.join( self.invocation_dir, f".git/modules/{self.submodule_path}")
+        config_path = os.path.join(
+            self.invocation_dir, f".git/modules/{self.submodule_path}"
+        )
         if config_path and os.path.exists(config_path):
             try:
                 self.info(f"Attempting directory removal from: {config_path}")
