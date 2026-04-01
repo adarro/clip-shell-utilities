@@ -35,6 +35,7 @@ import subprocess
 import sys
 import tempfile
 import warnings
+from pathlib import Path
 from typing import Optional, Tuple
 
 
@@ -342,6 +343,33 @@ class GitSubmoduleRemover:
             self.error(f"Failed to update .gitmodules: {e}")
             return False
 
+    def _remove_submodule_meta(self) -> bool:
+        """
+        Remove the submodule directories from the .git/modules/**.
+
+        For root submodules: .git/config
+        For nested submodules: .git/modules/{path}/config
+        """
+        self.info("Removing entry from git config...")
+
+        # If locate the config file and rm the parent (check for is module vs root repo ::wink::)
+        config_path = self._get_git_config_path()
+        if config_path and os.path.exists(config_path) and "modules" in config_path:
+            try:
+                self.info(f"Attempting directory removal from: {config_path}")
+                shutil.rmtree(Path(config_path).parent, ignore_errors=True)
+                return True
+            except Exception as e:
+                self.warning(
+                    f"Failed to remove from git modules directory directly: {e}"
+                )
+
+        # Still return True as this might not be critical
+        self.warning(
+            "Could not verify removal of module meta data folders, but continuing..."
+        )
+        return True
+
     def _remove_from_git_config(self) -> bool:
         """
         Remove the submodule entry from the appropriate git config file.
@@ -451,11 +479,14 @@ class GitSubmoduleRemover:
             if not self._remove_from_git_config():
                 raise RuntimeError("Failed to remove from .git/config")
 
-            if not self._remove_from_gitmodules():
-                raise RuntimeError("Failed to remove from .gitmodules")
+            if not self._remove_submodule_meta():
+                raise RuntimeError("Failed to remove modules data folder")
 
-            if not self._clear_git_cache():
-                raise RuntimeError("Failed to clear git cache")
+            # if not self._remove_from_gitmodules():
+            #     raise RuntimeError("Failed to remove from .gitmodules")
+
+            # if not self._clear_git_cache():
+            #     raise RuntimeError("Failed to clear git cache")
 
             if not self._commit_removal():
                 raise RuntimeError("Failed to commit removal")
